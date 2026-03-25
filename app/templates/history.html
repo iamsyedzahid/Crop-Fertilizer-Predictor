@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Predictions</h4>
+        </div>
+        <div class="card-body p-4">
+            {% if predictions and predictions.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Type</th>
+                                <th>Input Data</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in predictions.items %}
+                                <tr>
+                                    <td><small class="text-muted">{{ record.timestamp.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                                    <td>
+                                        {% if record.prediction_type == 'crop' %}
+                                            <span class="badge bg-success"><i class="bi bi-tree me-1"></i>Crop</span>
+                                        {% else %}
+                                            <span class="badge bg-info text-dark"><i class="bi bi-droplet me-1"></i>Fertilizer</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#dataModal{{ record.id }}">
+                                            View Data
+                                        </button>
+                                        
+                                        <!-- Data Modal -->
+                                        <div class="modal fade" id="dataModal{{ record.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Prediction Parameters</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ record.input_data }}</pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold fs-6">{{ record.result.upper() }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination if needed -->
+                {% if predictions.pages > 1 %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if predictions.has_prev %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('main.prediction_history', page=predictions.prev_num) }}">Previous</a></li>
+                            {% endif %}
+                            
+                            {% for page_num in predictions.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                {% if page_num %}
+                                    {% if predictions.page == page_num %}
+                                        <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                                    {% else %}
+                                        <li class="page-item"><a class="page-link" href="{{ url_for('main.prediction_history', page=page_num) }}">{{ page_num }}</a></li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if predictions.has_next %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('main.prediction_history', page=predictions.next_num) }}">Next</a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-clipboard-x display-1 text-muted mb-3 d-block"></i>
+                    <h5 class="text-muted">No prediction history available yet.</h5>
+                    <p>Go to the Predict page to make your first recommendation!</p>
+                    <a href="{{ url_for('main.predict_form') }}" class="btn btn-primary mt-2">Make Prediction</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

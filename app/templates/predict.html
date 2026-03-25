@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Predict - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3 slide-in-left">Make a Prediction</h1>
+        <p class="lead mb-0 slide-in-right">Enter your soil and environmental data to get AI-powered recommendations.</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Crop Prediction Form -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 fade-in">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0"><i class="bi bi-tree me-2"></i>Crop Recommendation</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="cropForm" method="POST" action="/predict/crop">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Nitrogen (N)</label>
+                                <input type="number" step="any" name="nitrogen" class="form-control" placeholder="Ratio" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Phosphorus (P)</label>
+                                <input type="number" step="any" name="phosphorus" class="form-control" placeholder="Ratio" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Potassium (K)</label>
+                                <input type="number" step="any" name="potassium" class="form-control" placeholder="Ratio" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Temperature (°C)</label>
+                                <input type="number" step="any" name="temperature" class="form-control" placeholder="e.g. 25" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Humidity (%)</label>
+                                <input type="number" step="any" name="humidity" class="form-control" placeholder="e.g. 70" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Soil pH</label>
+                                <input type="number" step="any" name="ph" class="form-control" placeholder="e.g. 6.5" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Rainfall (mm)</label>
+                                <input type="number" step="any" name="rainfall" class="form-control" placeholder="e.g. 150" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-2">
+                            Predict Crop
+                        </button>
+                    </form>
+                    <div id="cropResult" class="mt-4 d-none p-3 border rounded bg-light">
+                        <h5>Recommended Crop:</h5>
+                        <p id="cropOutput" class="fw-bold text-success fs-4 mb-0"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fertilizer Recommendation Form -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0 fade-in">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0"><i class="bi bi-droplet me-2"></i>Fertilizer Recommendation</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="fertilizerForm" method="POST" action="/predict/fertilizer">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Nitrogen (N)</label>
+                                <input type="number" step="any" name="nitrogen" class="form-control" placeholder="Ratio" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Phosphorus (P)</label>
+                                <input type="number" step="any" name="phosphorus" class="form-control" placeholder="Ratio" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Potassium (K)</label>
+                                <input type="number" step="any" name="potassium" class="form-control" placeholder="Ratio" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Crop Type</label>
+                            <input type="text" name="crop_type" class="form-control" placeholder="e.g. rice, maize, cotton" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            Recommend Fertilizer
+                        </button>
+                    </form>
+                    <div id="fertilizerResult" class="mt-4 d-none p-3 border rounded bg-light">
+                        <h5>Recommended Fertilizer:</h5>
+                        <p id="fertilizerOutput" class="fw-bold text-primary fs-4 mb-0"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    // Handle form submissions via AJAX
+    document.getElementById('cropForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Predicting...';
+        
+        try {
+            const response = await fetch('/predict/crop', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('cropResult').classList.remove('d-none');
+                document.getElementById('cropOutput').textContent = result.prediction.toUpperCase();
+            } else {
+                alert(result.error || 'An error occurred during prediction.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to connect to the server.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Predict Crop';
+        }
+    });
+
+    document.getElementById('fertilizerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Recommending...';
+        
+        try {
+            const response = await fetch('/predict/fertilizer', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('fertilizerResult').classList.remove('d-none');
+                document.getElementById('fertilizerOutput').textContent = result.recommendation.toUpperCase();
+            } else {
+                alert(result.error || 'An error occurred during recommendation.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to connect to the server.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Recommend Fertilizer';
+        }
+    });
+</script>
+{% endblock %}
