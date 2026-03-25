@@ -28,7 +28,7 @@ class FertilizerRecommender:
                 return
             
             genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel("gemini-1.5-flash")
+            self.model = genai.GenerativeModel("gemini-pro")
             self.is_loaded = True
             logger.info("Gemini Fertilizer recommendation model loaded successfully")
         except Exception as e:
