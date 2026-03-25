@@ -12,6 +12,7 @@ from app.ml.crop_model import CropPredictor
 from app.ml.fertilizer_model import FertilizerRecommender
 import logging
 from datetime import datetime
+from sqlalchemy import text
 
 # Create Blueprint for modular route organization
 main = Blueprint('main', __name__)
@@ -110,8 +111,7 @@ def predict_crop():
             prediction_record = PredictionHistory(
                 prediction_type='crop',
                 input_data=str(prediction_data),
-                result=str(prediction_result),
-                timestamp=datetime.utcnow()
+                result=str(prediction_result)
             )
             db.session.add(prediction_record)
             db.session.commit()
@@ -188,8 +188,7 @@ def predict_fertilizer():
             prediction_record = PredictionHistory(
                 prediction_type='fertilizer',
                 input_data=str(recommendation_data),
-                result=str(recommendation_result),
-                timestamp=datetime.utcnow()
+                result=str(recommendation_result)
             )
             db.session.add(prediction_record)
             db.session.commit()
@@ -252,7 +251,7 @@ def health_check():
     """
     try:
         # Check database connection
-        db.session.execute('SELECT 1')
+        db.session.execute(text('SELECT 1'))
         
         # Check ML models status
         crop_status = crop_predictor.is_ready()
